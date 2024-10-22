@@ -27,7 +27,7 @@ void init_pwm() {
   gpio_set_function(PIN_PWM, GPIO_FUNC_PWM);
   uint slice_num = pwm_gpio_to_slice_num(PIN_PWM);
   pwm_config config = pwm_get_default_config();
-  pwm_config_set_clkdiv(&config, 40.0);
+  pwm_config_set_clkdiv(&config, 40.0); //frequency
   pwm_init(slice_num, &config, true);
   pwm_set_gpio_level(PIN_PWM, 0U);
 }

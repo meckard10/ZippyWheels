@@ -20,7 +20,7 @@ uint16_t _adc_reading_;
 
 void read_adc(void) {
     adc_select_input(PIN_26_GPIO_CHANNEL);
-    _adc_reading_ = adc_read();
+    _adc_reading_ = 2*adc_read();//multiplied by 2!!!!!!!!!!!!!!!!!!!!!!
  }
 
 ////////////////////////////////////////////////////////////////////////////////
