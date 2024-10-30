@@ -4,50 +4,70 @@
 // last edited 2023-11-07
 ////////////////////////////////////////////////////////////////////////////////
 
+
 #include "hardware/adc.h"
 #include "pico/stdlib.h"
-
 #include "bt_setup.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
 
 #define PIN_26_GPIO_CHANNEL 26U
 #define PIN_26_ADC_CHANNEL  0U
+#define BUTTON_PIN 14
+
 
 uint16_t _adc_reading_;
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
 
 void read_adc(void) {
-    adc_select_input(PIN_26_GPIO_CHANNEL);
-    _adc_reading_ = 2*adc_read();//multiplied by 2!!!!!!!!!!!!!!!!!!!!!!
- }
+   adc_select_input(PIN_26_GPIO_CHANNEL);
+   if (gpio_get(BUTTON_PIN)) {_adc_reading_ = 2*adc_read();}
+   else {_adc_reading_ = _adc_reading_/1.10;} // when trigger is not pushed
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
+
 
 void initialize_adc() {
-    adc_init();
-    adc_gpio_init(PIN_26_GPIO_CHANNEL);
-    adc_select_input(PIN_26_ADC_CHANNEL);
-    adc_set_temp_sensor_enabled(true);
+   adc_init();
+   adc_gpio_init(PIN_26_GPIO_CHANNEL);
+   adc_select_input(PIN_26_ADC_CHANNEL);
+   adc_set_temp_sensor_enabled(true);
 }
+
+
+void initialize_button(){
+   gpio_init(BUTTON_PIN);
+   gpio_set_dir(BUTTON_PIN,GPIO_IN);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 int main() {
-    stdio_init_all();
-    initialize_adc();
-    bt_init(&read_adc, &_adc_reading_);
-    bt_start();
-    
-    while(true) {   
-        // Do nothing, all further activity handled by bt handlers   
-        sleep_ms(1000);
-    }
-    
-    return 0;
+   stdio_init_all();
+   initialize_adc();
+   initialize_button();
+   bt_init(&read_adc, &_adc_reading_);
+   bt_start();
+  
+   while(true) {  
+       // Do nothing, all further activity handled by bt handlers
+       sleep_ms(1000);
+   }
+  
+   return 0;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // End of file
+////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
