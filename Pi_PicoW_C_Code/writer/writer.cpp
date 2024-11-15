@@ -26,7 +26,7 @@ uint16_t _adc_reading_;
 
 void read_adc(void) {
    adc_select_input(PIN_26_GPIO_CHANNEL);
-   if (gpio_get(BUTTON_PIN)) {_adc_reading_ = 2*adc_read();}
+   if (gpio_get(BUTTON_PIN)) {_adc_reading_ = 16*adc_read();}
    else {_adc_reading_ = _adc_reading_/1.10;} // when trigger is not pushed
 }
 
