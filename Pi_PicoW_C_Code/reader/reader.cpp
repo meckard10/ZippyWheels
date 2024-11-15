@@ -6,20 +6,40 @@
 
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
+#include "stdio.h"
 
 #include "bt_setup.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #define PIN_PWM 21U
+#define HALL_PAD 15
+#define SCALING_FACTOR 50
 
 uint16_t _received_duty_;
+int pulseCount = 0;
+int rpm = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+void gpioIrqCallback(uint gpio, uint32_t event_mask){
+	if ((event_mask & GPIO_IRQ_EDGE_RISE)> 0){
+		pulseCount++; // Count the rising edges (voltage from hall sensor)
+	}
+}
+
+void initialize_hall_sensor() {
+   gpio_init(HALL_PAD);
+   gpio_set_dir(HALL_PAD, GPIO_IN);
+   gpio_pull_up(HALL_PAD);
+   gpio_set_irq_enabled_with_callback(HALL_PAD, GPIO_IRQ_EDGE_RISE, true, gpioIrqCallback);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void set_duty(void) {
   pwm_set_gpio_level(PIN_PWM, _received_duty_);
- }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,10 +58,22 @@ int main() {
     stdio_init_all();
 
     init_pwm();
-
+    initialize_hall_sensor();
     bt_init(&set_duty, &_received_duty_);
     bt_start();
-
+    
+    while(true) {  
+       // Do nothing, all further activity handled by bt handlers
+       sleep_ms(1000);
+       rpm = pulseCount*60/32; //32 pulses/revolutions * 60 seconds/min
+       //if (SCALING_FACTOR*rpm < _received_duty_ ){
+       //_received_duty_ = (_received_duty_-SCALING_FACTOR*rpm) +  _received_duty_  ;
+       //}
+       printf("RPM: %d\n", rpm); 
+       rpm=0;
+       pulseCount = 0;
+       
+    }
     return 0;
 }
 
