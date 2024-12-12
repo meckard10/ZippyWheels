@@ -14,9 +14,10 @@
 
 #define PIN_PWM 21U
 #define HALL_PAD 15
-#define SCALING_FACTOR 50
+#define SCALING_FACTOR 65535/1295
 
 uint16_t _received_duty_;
+uint16_t _modified_duty_;
 int pulseCount = 0;
 int rpm = 0;
 
@@ -38,7 +39,16 @@ void initialize_hall_sensor() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void set_duty(void) {
-  pwm_set_gpio_level(PIN_PWM, _received_duty_);
+  rpm = pulseCount*60/32; //32 pulses/revolutions * 60 seconds/min
+  _modified_duty_ = _received_duty_;
+  if (SCALING_FACTOR*(rpm-100) < _modified_duty_ ){
+    _modified_duty_ += 10  ;
+  }
+  else if (SCALING_FACTOR*(rpm+100) > _modified_duty_ ){
+    _modified_duty_ -= 10  ;
+  }
+  
+  pwm_set_gpio_level(PIN_PWM, _modified_duty_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,12 +75,9 @@ int main() {
     while(true) {  
        // Do nothing, all further activity handled by bt handlers
        sleep_ms(1000);
-       rpm = pulseCount*60/32; //32 pulses/revolutions * 60 seconds/min
-       //if (SCALING_FACTOR*rpm < _received_duty_ ){
-       //_received_duty_ = (_received_duty_-SCALING_FACTOR*rpm) +  _received_duty_  ;
-       //}
-       printf("RPM: %d\n", rpm); 
-       rpm=0;
+
+       //printf("RPM: %d\n", rpm); 
+	rpm=0;    
        pulseCount = 0;
        
     }
